@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
 const config = require('./env');
+
+// Set fallback public DNS servers for Node.js SRV record lookup on Windows
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch (e) {
+  // Fallback gracefully if custom DNS cannot be set
+}
 
 const connectDB = async () => {
   try {
