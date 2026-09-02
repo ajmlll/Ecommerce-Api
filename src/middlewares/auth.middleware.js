@@ -46,6 +46,29 @@ const protect = catchAsync(async (req, res, next) => {
   next();
 });
 
+/**
+ * Optional Auth middleware: Populates req.user if a valid token is present, otherwise proceeds silently.
+ */
+const optionalAuth = async (req, res, next) => {
+  try {
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer ')
+    ) {
+      const token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, config.jwtSecret);
+      const user = await User.findById(decoded.id);
+      if (user && user.isActive) {
+        req.user = user;
+      }
+    }
+  } catch (err) {
+    // Silently continue for optional authentication
+  }
+  next();
+};
+
 module.exports = {
   protect,
+  optionalAuth,
 };
