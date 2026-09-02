@@ -2,19 +2,33 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const config = require('./config/env');
+const logger = require('./config/logger');
+const setupSwagger = require('./config/swagger');
 const ApiError = require('./utils/ApiError');
 const errorHandler = require('./middlewares/error.middleware');
+const { globalRateLimiter } = require('./middlewares/rateLimiter.middleware');
+
+const authRoutes = require('./routes/auth.routes');
+const { userRouter, adminUserRouter } = require('./routes/user.routes');
+const categoryRoutes = require('./routes/category.routes');
+const productRoutes = require('./routes/product.routes');
+const orderRoutes = require('./routes/order.routes');
 
 const app = express();
 
-// Security middleware
+// Security HTTP headers
 app.use(helmet());
 
-// CORS configuration
+// Global Rate Limiting
+app.use(globalRateLimiter);
+
+// Enable CORS
 app.use(cors());
 
-// HTTP request logger
-app.use(morgan('dev'));
+// HTTP Request Logger piped through Winston stream
+const morganFormat = config.env === 'production' ? 'combined' : 'dev';
+app.use(morgan(morganFormat, { stream: logger.stream }));
 
 // Parse JSON payload
 app.use(express.json());
@@ -22,13 +36,10 @@ app.use(express.json());
 // Parse URL-encoded body payload
 app.use(express.urlencoded({ extended: true }));
 
-// API Routes
-const authRoutes = require('./routes/auth.routes');
-const { userRouter, adminUserRouter } = require('./routes/user.routes');
-const categoryRoutes = require('./routes/category.routes');
-const productRoutes = require('./routes/product.routes');
-const orderRoutes = require('./routes/order.routes');
+// Serve Swagger / OpenAPI Documentation at /api-docs
+setupSwagger(app);
 
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRouter);
 app.use('/api/admin/users', adminUserRouter);
