@@ -2,17 +2,21 @@ const joi = require('joi');
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
-const orderItemSchema = joi.object({
-  product: joi.string().regex(objectIdRegex).required().messages({
-    'any.required': 'Product ID is required',
-    'string.pattern.base': 'Product must be a valid Product ID',
-  }),
-  quantity: joi.number().integer().min(1).required().messages({
-    'any.required': 'Quantity is required',
-    'number.min': 'Quantity must be at least 1',
-    'number.integer': 'Quantity must be an integer',
-  }),
-});
+const orderItemSchema = joi
+  .object({
+    product: joi.string().regex(objectIdRegex).required().messages({
+      'any.required': 'Product ID is required',
+      'string.pattern.base': 'Product must be a valid Product ID',
+    }),
+    quantity: joi.number().integer().min(1).required().messages({
+      'any.required': 'Quantity is required',
+      'number.min': 'Quantity must be at least 1',
+      'number.integer': 'Quantity must be an integer',
+    }),
+    price: joi.number().optional(),
+    name: joi.string().optional(),
+  })
+  .unknown();
 
 const createOrderSchema = joi.object({
   items: joi.array().items(orderItemSchema).min(1).required().messages({
