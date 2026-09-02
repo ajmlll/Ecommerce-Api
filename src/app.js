@@ -27,12 +27,14 @@ const authRoutes = require('./routes/auth.routes');
 const { userRouter, adminUserRouter } = require('./routes/user.routes');
 const categoryRoutes = require('./routes/category.routes');
 const productRoutes = require('./routes/product.routes');
+const orderRoutes = require('./routes/order.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRouter);
 app.use('/api/admin/users', adminUserRouter);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Handle 404 - Unmatched Routes
 app.use((req, res, next) => {
