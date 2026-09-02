@@ -14,6 +14,25 @@ Order placement runs inside a multi-document Mongoose transaction using single-d
 
 ---
 
+## Project Structure
+
+```
+src/
+  config/       # App configuration, database connection, environment loading, logger, and Swagger setup
+  controllers/  # Thin HTTP request handlers delegating logic to services
+  middlewares/  # Authentication, authorization, validation, rate limiting, and error handling
+  models/       # Mongoose data models and schemas (User, Category, Product, Order)
+  routes/       # Express route definitions and middleware bindings
+  services/     # Core business logic, tree manipulation, and transaction operations
+  utils/        # Custom ApiError, ApiResponse, catchAsync wrappers, and seed utilities
+  validators/   # Joi request validation schemas
+  app.js        # Express app middleware assembly and route mounting
+  server.js     # Entry point initializing DB connection and HTTP server
+tests/          # Integration test suites (Jest + Supertest)
+```
+
+---
+
 ## Prerequisites
 
 - **Node.js**: `v18.0.0` or higher
@@ -30,6 +49,8 @@ mongod --replSet rs0 --dbpath /data/db
 rs.initiate()
 ```
 
+> 💡 **Troubleshooting**: If order placement fails with a transaction-related error (e.g. *"Transaction numbers are only allowed..."*), it almost always means MongoDB is not running as a replica set — re-check the `rs.initiate()` step.
+
 ---
 
 ## Environment Configuration
@@ -45,6 +66,8 @@ rs.initiate()
    - `MONGO_URI`: MongoDB connection string with replica set (e.g. `mongodb://localhost:27017/ecommerce_db`).
    - `JWT_SECRET`: Secret key used to sign and verify JSON Web Tokens.
    - `JWT_EXPIRES_IN`: JWT expiration timeframe (e.g. `7d`).
+   - `SEED_ADMIN_EMAIL`: Initial admin email for seed script (optional).
+   - `SEED_ADMIN_PASSWORD`: Initial admin password for seed script (optional; auto-generated if omitted).
 
 ---
 
@@ -56,13 +79,13 @@ rs.initiate()
    ```
 
 2. **Seed Initial Admin User**:
-   Run the seed utility script to create the initial super-admin user account:
+   Set `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` in your `.env` file (or allow auto-generation) and run the seed script:
    ```bash
    npm run seed
    ```
-   *Default Admin Credentials:*
-   - **Email**: `admin@example.com`
-   - **Password**: `Admin@123456`
+   *If `SEED_ADMIN_PASSWORD` is omitted, a random 12-character password will be generated and printed once to the console.*
+
+   > ⚠️ **Warning**: Always change the admin password after first login in any real deployment.
 
 3. **Start Development Server**:
    ```bash
@@ -77,6 +100,11 @@ rs.initiate()
 5. **Run Integration Tests**:
    ```bash
    npm test
+   ```
+
+   To run a quick subset targeting the two highest-risk test suites (category cycle prevention and order stock safety):
+   ```bash
+   npm test -- tests/integration.test.js
    ```
 
 ---
@@ -102,3 +130,9 @@ Includes schemas, endpoint parameters, and request/response examples for:
 - **Security Headers**: HTTP security headers injected via `helmet`.
 - **Request Logging**: Morgan HTTP logger piped to structured `winston` loggers (Console in dev, Console + `logs/` file transports in production).
 - **Centralized Error Handling**: Unified `ApiError` format stripping stack traces in production.
+
+---
+
+## License
+
+This project is licensed under the [ISC License](package.json).
